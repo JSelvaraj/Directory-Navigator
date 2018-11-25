@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <link id="pagestyle" rel="stylesheet" href="dir_list.css" type="text/css" />
+  <title>Web2</title>
+</head>
+
+<body>
+
+  <h1>CS2003 Directory Lister (Remote File System Browser) </h1>
+  <h2>Test Directory </h2>
+
+  <hr />
+
+  <div id="string"></div>
+
+
+  <hr />
+  <script src="dir_list_json.js"></script>
+
+  <script>
+
+    let wsUrl = "ws://" + location.hostname + ":" + location.port;
+    let ws = new WebSocket(wsUrl);
+
+    ws.onmessage = function (m) {
+      let d_rx = JSON.parse(m.data);
+      console.log(d_rx);
+      if (d_rx["response"] == "dirinfo") {
+        console.log(d_rx["info"]);
+        try {
+          let markup = dirInfo2Markup(d_rx["info"]);
+          //console.log(markup);
+          document.getElementById("string").innerHTML = markup;
+        } catch (error) {
+          document.getElementById("string").innerHTML = error.message;
+        }
+      }
+    }
+
+    function back() {
+      let currentDirectory = document.getElementsByTagName("directoryname")[0].innerHTML;
+      let position = currentDirectory.lastIndexOf("/");
+      let parent = currentDirectory.slice(0, position);
+      try {
+        let request = { "request": "dirinfo", "dirpath": parent };
+        let string = JSON.stringify(request);
+        ws.send(string);
+        console.log(string);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    function getDirectory(localdir) {
+      try {
+        let directory = document.getElementsByTagName("directoryname")[0].innerHTML;
+        let y = { "request": "dirinfo", "dirpath": directory + "/" + localdir };
+        let string = JSON.stringify(y);
+        ws.send(string);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    function hide(filetype) {
+
+      let column = document.getElementsByTagName(filetype);
+      for (i = 1; i < column.length; ++i) {
+        if (column[i].style.visibility != "hidden") {
+          column[i].style.visibility = "hidden";
+        } else {
+          column[i].style.visibility = "visible";
+        }
+      }
+      console.log(filetype + " column has been hidden");
+    }
+  </script>
+</body>
+
+</html>
