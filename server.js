@@ -13,7 +13,12 @@ let dlj = require("./dir_list_json.js");
 
 let G_port = process.getuid(); /** type "id" on Linux for uid value **/
 if (G_port < 1024) G_port += 10000; // do not use privileged ports
-
+/**
+ * When a user connects to the address the server is hosted on they are served with index.html
+ * index.html then asks the server for its style sheet and javascript.
+ * @param {*} request The client asking for the server's content
+ * @param {*} response the server giving content to the client.
+ */
 function serveApp(request, response) {
   console.log(request.url);
   if (request.url === "/") {
@@ -59,21 +64,7 @@ function serveApp(request, response) {
         }
       }
     )
-   } else if (request.url !== "/favicon.ico") { //I don't know why but for some reason the server gets requests for favicon.ico when I run it.
-    fs.readFile(request.url,
-            function (error, data) {
-        if (error) {
-          console.log(error);
-          response.writeHead(500);
-          response.end("Error loading index.html");
-        } else {
-          console.log("Page loaded successfully")
-          response.writeHead(200, { 'Content-Type': 'text/html' });
-          response.write(data);
-          response.end();
-      }
-    });
-  }
+   } 
     
 };
 
@@ -105,7 +96,9 @@ wsServer.on("connection", function (ws) {
     console.log("Message received");
     try {
       if (object["request"] == "dirinfo") {
-        if (object["dirpath"] != __dirname) { //This if is so the client can't go to a parent folder above the root directory provided.
+        console.log(object["dirpath"] + " - requested");
+        let directory = object["dirpath"];
+        if (directory.includes(__dirname + "/test1Dir")) { //This if is so the client can't go to a parent folder above the root directory provided.
           dlj.getDirInfo(object["dirpath"], (error, result) => { // result is dirFileList
             if (error) { console.log(error); }
             else {

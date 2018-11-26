@@ -25,6 +25,10 @@
     let wsUrl = "ws://" + location.hostname + ":" + location.port;
     let ws = new WebSocket(wsUrl);
 
+    /**
+     * On receiving a message from the server, if it's directory information it displays
+     * it on the html page. 
+    */
     ws.onmessage = function (m) {
       let d_rx = JSON.parse(m.data);
       console.log(d_rx);
@@ -40,6 +44,8 @@
       }
     }
 
+    //If the user presses the back button the function gets the parent directory from the
+    //directoryname tag and requests its information from the server.
     function back() {
       let currentDirectory = document.getElementsByTagName("directoryname")[0].innerHTML;
       let position = currentDirectory.lastIndexOf("/");
@@ -47,12 +53,20 @@
       try {
         let request = { "request": "dirinfo", "dirpath": parent };
         let string = JSON.stringify(request);
-        ws.send(string);
+        if (string.includes("/test1Dir")) {
+          ws.send(string);
+        } else {
+          alert("Client not allowed to access beyond root directory");
+        }
+
         console.log(string);
       } catch (error) {
         console.log(error);
       }
     }
+    /*when a folder is pressed, it sends its own id(which is always its name), appends it
+    *appends it to the directory name and sends a request to the server on its socket.
+    */
     function getDirectory(localdir) {
       try {
         let directory = document.getElementsByTagName("directoryname")[0].innerHTML;
@@ -63,8 +77,11 @@
         console.log(error);
       }
     }
+    /*Each of the column headers sends a string representing its column to this function whn
+    it is clicked. This function then goes through the visible html and makes html of the filetyp
+    hidden. 
+    */
     function hide(filetype) {
-
       let column = document.getElementsByTagName(filetype);
       for (i = 1; i < column.length; ++i) {
         if (column[i].style.visibility != "hidden") {
@@ -74,6 +91,11 @@
         }
       }
       console.log(filetype + " column has been hidden");
+    }
+
+    //Informs the user if the socket closes, so connection to the server is lost.
+    ws.onclose = function (e) {
+      alert("WebSocket closed.");
     }
   </script>
 </body>
